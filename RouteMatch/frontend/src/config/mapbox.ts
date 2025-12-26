@@ -1,10 +1,10 @@
 // frontend/src/config/mapbox.ts
 
 // Mapbox configuration for RouteMatch application
-import MapboxGL from '@react-native-mapbox-gl/maps';
+import MapboxGL from '@rnmapbox/maps';
 
 // Set your Mapbox access token here
-const MAPBOX_ACCESS_TOKEN = 'YOUR_MAPBOX_ACCESS_TOKEN';
+const MAPBOX_ACCESS_TOKEN = process.env.REACT_APP_MAPBOX_API_KEY || 'YOUR_MAPBOX_ACCESS_TOKEN';
 
 // Initialize Mapbox with the access token
 MapboxGL.setAccessToken(MAPBOX_ACCESS_TOKEN);
