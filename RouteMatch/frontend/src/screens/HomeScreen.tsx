@@ -9,16 +9,18 @@ import {
   Alert,
   PermissionsAndroid,
   Platform,
+  ScrollView,
 } from 'react-native';
 import MapboxGL from '@rnmapbox/maps';
 import Geolocation from 'react-native-geolocation-service';
-import { MapMarker } from '../components';
+import { MapMarker, Card } from '../components';
+import colors from '../theme/colors';
 
 // Mock data for nearby drivers
-const mockDrivers = [
+const mockDrivers: Array<{ id: string; coordinate: [number, number]; name: string }> = [
   { id: '1', coordinate: [-122.4194, 37.7749], name: 'Driver 1' },
   { id: '2', coordinate: [-122.4085, 37.7839], name: 'Driver 2' },
-  { id: '3', coordinate: [-122.4312, 37.7880], name: 'Driver 3' },
+  { id: '3', coordinate: [-122.4312, 37.788], name: 'Driver 3' },
 ];
 
 interface Location {
@@ -26,7 +28,11 @@ interface Location {
   longitude: number;
 }
 
-const HomeScreen: React.FC = () => {
+interface HomeScreenProps {
+  navigation: { navigate: (routeName: string) => void };
+}
+
+const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const [searchText, setSearchText] = useState('');
   const [userLocation, setUserLocation] = useState<Location | null>(null);
   const [nearbyDrivers] = useState(mockDrivers);
@@ -90,18 +96,15 @@ const HomeScreen: React.FC = () => {
       Alert.alert('Error', 'Please enter a destination');
       return;
     }
-    Alert.alert('Find Ride', `Searching for rides to: ${searchText}`);
-    // TODO: Implement ride search logic
+    navigation.navigate('FindRide');
   };
 
   const handleOfferRide = () => {
-    Alert.alert('Offer Ride', 'Navigate to offer ride screen');
-    // TODO: Navigate to offer ride screen
+    navigation.navigate('OfferRide');
   };
 
   const handleDailyRoute = () => {
-    Alert.alert('Daily Route', 'Navigate to daily route screen');
-    // TODO: Navigate to daily route screen
+    navigation.navigate('DailyRoute');
   };
 
   const handleMarkerPress = (driver: typeof mockDrivers[0]) => {
@@ -110,69 +113,90 @@ const HomeScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search destination"
-          value={searchText}
-          onChangeText={setSearchText}
-          placeholderTextColor="#9CA3AF"
-        />
-      </View>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.heroSection}>
+          <Text style={styles.brandText}>ROUTEMATCH</Text>
+          <Text style={styles.tagline}>Same route. Shared ride.</Text>
+          <Text style={styles.subtleText}>Powered by AI Route Matching</Text>
+        </View>
 
-      {/* Action Buttons */}
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity style={[styles.button, styles.findRideButton]} onPress={handleFindRide}>
-          <Text style={styles.buttonText}>Find Ride</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.button, styles.offerRideButton]} onPress={handleOfferRide}>
-          <Text style={styles.buttonText}>Offer Ride</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.button, styles.dailyRouteButton]} onPress={handleDailyRoute}>
-          <Text style={styles.buttonText}>Daily Route</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Map View */}
-      <View style={styles.mapContainer}>
-        <MapboxGL.MapView
-          ref={mapRef}
-          style={styles.map}
-          styleURL={MapboxGL.StyleURL.Street}
-          compassEnabled={true}
-          compassViewPosition={3}
-        >
-          <MapboxGL.Camera
-            ref={cameraRef}
-            centerCoordinate={userLocation ? [userLocation.longitude, userLocation.latitude] : [-122.4194, 37.7749]}
-            zoomLevel={14}
+        <View style={styles.searchContainer}>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search destination"
+            value={searchText}
+            onChangeText={setSearchText}
+            placeholderTextColor="#9CA3AF"
           />
+        </View>
 
-          {/* User Location Marker */}
-          {userLocation && (
-            <MapMarker
-              id="user-location"
-              coordinate={[userLocation.longitude, userLocation.latitude]}
-              type="rider"
-              title="Your Location"
-            />
-          )}
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity style={[styles.button, styles.findRideButton]} onPress={handleFindRide}>
+            <Text style={styles.buttonText}>Find Ride</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.button, styles.offerRideButton]} onPress={handleOfferRide}>
+            <Text style={styles.buttonText}>Offer Ride</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.button, styles.dailyRouteButton]} onPress={handleDailyRoute}>
+            <Text style={styles.buttonText}>Daily Route</Text>
+          </TouchableOpacity>
+        </View>
 
-          {/* Nearby Drivers Markers */}
-          {nearbyDrivers.map((driver) => (
-            <MapMarker
-              key={driver.id}
-              id={driver.id}
-              coordinate={driver.coordinate}
-              type="driver"
-              title={driver.name}
-              description="Available driver"
-              onPress={() => handleMarkerPress(driver)}
+        <Card>
+          <View style={styles.infoRow}>
+            <View>
+              <Text style={styles.infoTitle}>Route Match</Text>
+              <Text style={styles.infoValue}>82% nearby</Text>
+            </View>
+            <View>
+              <Text style={styles.infoTitle}>Avg. Savings</Text>
+              <Text style={styles.infoValue}>35% lower</Text>
+            </View>
+            <View>
+              <Text style={styles.infoTitle}>Pickup Walk</Text>
+              <Text style={styles.infoValue}>200 m</Text>
+            </View>
+          </View>
+        </Card>
+
+        <Text style={styles.sectionTitle}>Nearby drivers</Text>
+        <View style={styles.mapContainer}>
+          <MapboxGL.MapView
+            ref={mapRef}
+            style={styles.map}
+            styleURL={MapboxGL.StyleURL.Street}
+            compassEnabled={true}
+            compassViewPosition={3}
+          >
+            <MapboxGL.Camera
+              ref={cameraRef}
+              centerCoordinate={userLocation ? [userLocation.longitude, userLocation.latitude] : [-122.4194, 37.7749]}
+              zoomLevel={14}
             />
-          ))}
-        </MapboxGL.MapView>
-      </View>
+
+            {userLocation && (
+              <MapMarker
+                id="user-location"
+                coordinate={[userLocation.longitude, userLocation.latitude]}
+                type="rider"
+                title="Your Location"
+              />
+            )}
+
+            {nearbyDrivers.map((driver) => (
+              <MapMarker
+                key={driver.id}
+                id={driver.id}
+                coordinate={driver.coordinate}
+                type="driver"
+                title={driver.name}
+                description="Available driver"
+                onPress={() => handleMarkerPress(driver)}
+              />
+            ))}
+          </MapboxGL.MapView>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -180,12 +204,36 @@ const HomeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.softGray,
+  },
+  scrollContent: {
+    paddingBottom: 24,
+  },
+  heroSection: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 12,
+  },
+  brandText: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: colors.darkSlate,
+  },
+  tagline: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.electricBlue,
+    marginTop: 4,
+  },
+  subtleText: {
+    fontSize: 12,
+    color: colors.slateMuted,
+    marginTop: 4,
   },
   searchContainer: {
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -219,21 +267,47 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   findRideButton: {
-    backgroundColor: '#3B82F6', // Blue
+    backgroundColor: colors.electricBlue,
   },
   offerRideButton: {
-    backgroundColor: '#10B981', // Green
+    backgroundColor: colors.freshGreen,
   },
   dailyRouteButton: {
-    backgroundColor: '#F59E0B', // Yellow
+    backgroundColor: colors.warning,
   },
   buttonText: {
     color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '600',
   },
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  infoTitle: {
+    fontSize: 12,
+    color: colors.slateMuted,
+  },
+  infoValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.darkSlate,
+    marginTop: 4,
+  },
+  sectionTitle: {
+    paddingHorizontal: 16,
+    marginTop: 8,
+    marginBottom: 8,
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.darkSlate,
+  },
   mapContainer: {
-    flex: 1,
+    height: 320,
+    marginHorizontal: 16,
+    borderRadius: 16,
+    overflow: 'hidden',
+    backgroundColor: colors.white,
   },
   map: {
     flex: 1,

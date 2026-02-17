@@ -1,18 +1,25 @@
-import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
+import { createAppContainer, createSwitchNavigator } from 'react-navigation';
+import DailyRouteScreen from './screens/DailyRouteScreen';
+import FindRideScreen from './screens/FindRideScreen';
 import HomeScreen from './screens/HomeScreen';
+import LiveRideTrackingScreen from './screens/LiveRideTrackingScreen';
+import MatchingScreen from './screens/MatchingScreen';
+import OfferRideScreen from './screens/OfferRideScreen';
+import SplashScreen from './screens/SplashScreen';
 
-const Stack = createStackNavigator();
+const AppNavigator = createSwitchNavigator(
+  {
+    Splash: SplashScreen,
+    Home: HomeScreen,
+    FindRide: FindRideScreen,
+    Matching: MatchingScreen,
+    LiveRide: LiveRideTrackingScreen,
+    OfferRide: OfferRideScreen,
+    DailyRoute: DailyRouteScreen,
+  },
+  {
+    initialRouteName: 'Splash',
+  },
+);
 
-const App = () => {
-  return (
-    <NavigationContainer>
-      <Stack.Navigator initialRouteName="Home">
-        <Stack.Screen name="Home" component={HomeScreen} />
-      </Stack.Navigator>
-    </NavigationContainer>
-  );
-};
-
-export default App;
+export default createAppContainer(AppNavigator);
