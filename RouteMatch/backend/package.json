@@ -15,7 +15,7 @@
     "cors": "^2.8.5",
     "body-parser": "^1.19.0",
     "socket.io": "^4.0.0",
-    "mapbox-sdk": "^2.0.0"
+    "@mapbox/mapbox-sdk": "^0.16.1"
   },
   "devDependencies": {
     "typescript": "^4.4.3",

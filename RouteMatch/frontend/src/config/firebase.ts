@@ -1,32 +1,38 @@
-import firebase from 'firebase/app';
-import 'firebase/auth';
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/auth';
 
-// Firebase configuration for OTP login
 const firebaseConfig = {
-  apiKey: 'YOUR_API_KEY',
-  authDomain: 'YOUR_AUTH_DOMAIN',
-  projectId: 'YOUR_PROJECT_ID',
-  storageBucket: 'YOUR_STORAGE_BUCKET',
-  messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',
-  appId: 'YOUR_APP_ID',
+  apiKey: process.env.FIREBASE_API_KEY || 'YOUR_API_KEY',
+  authDomain: process.env.FIREBASE_AUTH_DOMAIN || 'YOUR_AUTH_DOMAIN',
+  projectId: process.env.FIREBASE_PROJECT_ID || 'YOUR_PROJECT_ID',
+  storageBucket: process.env.FIREBASE_STORAGE_BUCKET || 'YOUR_STORAGE_BUCKET',
+  messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID || 'YOUR_MESSAGING_SENDER_ID',
+  appId: process.env.FIREBASE_APP_ID || 'YOUR_APP_ID',
 };
 
-// Initialize Firebase
 if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
 }
 
-// Function to send OTP
-export const sendOtp = async (phoneNumber) => {
-  const appVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container');
-  return await firebase.auth().signInWithPhoneNumber(phoneNumber, appVerifier);
-};
-
-// Function to verify OTP
-export const verifyOtp = async (verificationId, otp) => {
-  const credential = firebase.auth.PhoneAuthProvider.credential(verificationId, otp);
-  return await firebase.auth().signInWithCredential(credential);
-};
-
-// Export Firebase auth instance
 export const auth = firebase.auth();
+
+export const sendOtp = async (
+  phoneNumber: string,
+  recaptchaContainerId = 'recaptcha-container',
+): Promise<firebase.auth.ConfirmationResult> => {
+  const verifier = new firebase.auth.RecaptchaVerifier(recaptchaContainerId, {
+    size: 'invisible',
+  });
+
+  return auth.signInWithPhoneNumber(phoneNumber, verifier);
+};
+
+export const verifyOtp = async (
+  verificationId: string,
+  otp: string,
+): Promise<firebase.auth.UserCredential> => {
+  const credential = firebase.auth.PhoneAuthProvider.credential(verificationId, otp);
+  return auth.signInWithCredential(credential);
+};
+
+export default firebase;

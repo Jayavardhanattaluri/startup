@@ -1,13 +1,12 @@
-// This file initializes Mapbox for backend services, exporting the configuration needed to use Mapbox APIs.
-
-import MapboxClient from '@mapbox/mapbox-sdk';
-
-const mapboxAccessToken = process.env.MAPBOX_ACCESS_TOKEN;
-
-if (!mapboxAccessToken) {
-    throw new Error('Mapbox access token is not defined in the environment variables.');
+interface MapboxConfig {
+  accessToken: string;
 }
 
-const mapboxClient = MapboxClient({ accessToken: mapboxAccessToken });
+let mapboxConfig: MapboxConfig | null = null;
 
-export { mapboxClient };
+export const initializeMapbox = (): void => {
+  const token = process.env.MAPBOX_ACCESS_TOKEN;
+  mapboxConfig = token ? { accessToken: token } : null;
+};
+
+export const getMapboxConfig = (): MapboxConfig | null => mapboxConfig;

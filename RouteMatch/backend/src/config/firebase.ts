@@ -1,23 +1,27 @@
 import admin from 'firebase-admin';
-import serviceAccount from './path/to/serviceAccountKey.json'; // Replace with the actual path to your service account key
 
-// Initialize Firebase Admin SDK
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-  databaseURL: 'https://<YOUR_PROJECT_ID>.firebaseio.com' // Replace <YOUR_PROJECT_ID> with your actual project ID
-});
+export const initializeFirebase = (): void => {
+  if (admin.apps.length > 0) {
+    return;
+  }
 
-// Export Firebase Admin SDK for use in other parts of the application
-export const auth = admin.auth();
-export const db = admin.database(); // If using Realtime Database
-// export const firestore = admin.firestore(); // Uncomment if using Firestore
+  const projectId = process.env.FIREBASE_PROJECT_ID;
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
 
-// Function to send OTP
-export const sendOtp = async (phoneNumber: string) => {
-  // Implement OTP sending logic here
+  if (projectId && clientEmail && privateKey) {
+    admin.initializeApp({
+      credential: admin.credential.cert({
+        projectId,
+        clientEmail,
+        privateKey,
+      }),
+    });
+    return;
+  }
+
+  // Fallback for local development where Firebase credentials are not configured.
+  admin.initializeApp();
 };
 
-// Function to verify OTP
-export const verifyOtp = async (phoneNumber: string, otp: string) => {
-  // Implement OTP verification logic here
-};
+export const getFirebaseAuth = () => admin.auth();

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import MapboxGL from '@rnmapbox/maps';
 
 interface MapMarkerProps {
@@ -22,13 +22,13 @@ const MapMarker: React.FC<MapMarkerProps> = ({
   const getMarkerColor = () => {
     switch (type) {
       case 'driver':
-        return '#10B981'; // Green for available drivers
+        return '#10B981';
       case 'rider':
-        return '#3B82F6'; // Blue for riders
+        return '#3B82F6';
       case 'pickup':
-        return '#F59E0B'; // Yellow for pickup
+        return '#F59E0B';
       case 'destination':
-        return '#EF4444'; // Red for destination
+        return '#EF4444';
       default:
         return '#6B7280';
     }
@@ -37,13 +37,13 @@ const MapMarker: React.FC<MapMarkerProps> = ({
   const getMarkerIcon = () => {
     switch (type) {
       case 'driver':
-        return '🚗'; // Car emoji for drivers
+        return '🚗';
       case 'rider':
-        return '👤'; // Person emoji for riders
+        return '👤';
       case 'pickup':
-        return '📍'; // Pin emoji for pickup
+        return '📍';
       case 'destination':
-        return '🏁'; // Flag emoji for destination
+        return '🏁';
       default:
         return '📍';
     }
@@ -58,10 +58,8 @@ const MapMarker: React.FC<MapMarkerProps> = ({
       onSelected={onPress}
     >
       <View style={[styles.markerContainer, { backgroundColor: getMarkerColor() }]}>
-        <View style={styles.markerIcon}>
-          {getMarkerIcon()}
-        </View>
-        <View style={styles.markerPointer} />
+        <Text style={styles.markerIcon}>{getMarkerIcon()}</Text>
+        <View style={[styles.markerPointer, { borderTopColor: getMarkerColor() }]} />
       </View>
     </MapboxGL.PointAnnotation>
   );
@@ -98,7 +96,6 @@ const styles = StyleSheet.create({
     borderTopWidth: 8,
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
-    borderTopColor: 'inherit',
   },
 });
 

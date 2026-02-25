@@ -1,75 +1,77 @@
-// RideController.ts
-
 import { Request, Response } from 'express';
-import Ride from '../models/Ride';
+import { RideStore } from '../models/Ride';
+import { matchRiderWithDriver } from '../matchingEngine';
 
 class RideController {
-    // Create a new ride
-    public async createRide(req: Request, res: Response): Promise<void> {
-        try {
-            const rideData = req.body;
-            const newRide = new Ride(rideData);
-            await newRide.save();
-            res.status(201).json(newRide);
-        } catch (error) {
-            res.status(500).json({ message: 'Error creating ride', error });
-        }
+  public createRide(req: Request, res: Response): void {
+    try {
+      const { pickupLocation, dropOffLocation, riderId } = req.body;
+
+      if (!pickupLocation || !dropOffLocation || !riderId) {
+        res.status(400).json({ message: 'pickupLocation, dropOffLocation, and riderId are required' });
+        return;
+      }
+
+      const newRide = RideStore.create(req.body);
+      res.status(201).json(newRide);
+    } catch (error) {
+      res.status(500).json({ message: 'Error creating ride', error });
+    }
+  }
+
+  public getRides(_req: Request, res: Response): void {
+    res.status(200).json(RideStore.list());
+  }
+
+  public getAvailableRides(_req: Request, res: Response): void {
+    res.status(200).json(RideStore.listAvailable());
+  }
+
+  public getRideById(req: Request, res: Response): void {
+    const ride = RideStore.getById(req.params.id);
+    if (!ride) {
+      res.status(404).json({ message: 'Ride not found' });
+      return;
     }
 
-    // Fetch all rides
-    public async getRides(req: Request, res: Response): Promise<void> {
-        try {
-            const rides = await Ride.find();
-            res.status(200).json(rides);
-        } catch (error) {
-            res.status(500).json({ message: 'Error fetching rides', error });
-        }
+    res.status(200).json(ride);
+  }
+
+  public updateRide(req: Request, res: Response): void {
+    const updatedRide = RideStore.update(req.params.id, req.body);
+    if (!updatedRide) {
+      res.status(404).json({ message: 'Ride not found' });
+      return;
     }
 
-    // Fetch a ride by ID
-    public async getRideById(req: Request, res: Response): Promise<void> {
-        try {
-            const rideId = req.params.id;
-            const ride = await Ride.findById(rideId);
-            if (!ride) {
-                res.status(404).json({ message: 'Ride not found' });
-                return;
-            }
-            res.status(200).json(ride);
-        } catch (error) {
-            res.status(500).json({ message: 'Error fetching ride', error });
-        }
+    res.status(200).json(updatedRide);
+  }
+
+  public deleteRide(req: Request, res: Response): void {
+    const deleted = RideStore.delete(req.params.id);
+    if (!deleted) {
+      res.status(404).json({ message: 'Ride not found' });
+      return;
     }
 
-    // Update a ride
-    public async updateRide(req: Request, res: Response): Promise<void> {
-        try {
-            const rideId = req.params.id;
-            const updatedRide = await Ride.findByIdAndUpdate(rideId, req.body, { new: true });
-            if (!updatedRide) {
-                res.status(404).json({ message: 'Ride not found' });
-                return;
-            }
-            res.status(200).json(updatedRide);
-        } catch (error) {
-            res.status(500).json({ message: 'Error updating ride', error });
-        }
+    res.status(204).send();
+  }
+
+  public matchRide(req: Request, res: Response): void {
+    const { riderLocation } = req.body;
+    if (!riderLocation?.latitude || !riderLocation?.longitude) {
+      res.status(400).json({ message: 'riderLocation with latitude and longitude is required' });
+      return;
     }
 
-    // Delete a ride
-    public async deleteRide(req: Request, res: Response): Promise<void> {
-        try {
-            const rideId = req.params.id;
-            const deletedRide = await Ride.findByIdAndDelete(rideId);
-            if (!deletedRide) {
-                res.status(404).json({ message: 'Ride not found' });
-                return;
-            }
-            res.status(204).send();
-        } catch (error) {
-            res.status(500).json({ message: 'Error deleting ride', error });
-        }
+    const ride = matchRiderWithDriver(riderLocation, RideStore.listAvailable());
+    if (!ride) {
+      res.status(404).json({ message: 'No suitable ride found' });
+      return;
     }
+
+    res.status(200).json(ride);
+  }
 }
 
 export default new RideController();

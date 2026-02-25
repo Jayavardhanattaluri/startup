@@ -1,40 +1,40 @@
 import { useState, useEffect } from 'react';
-import firebase from '../config/firebase'; // Import Firebase configuration
+import firebase from '../config/firebase';
 
 const useAuth = () => {
-    const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<firebase.User | null>(null);
+  const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const unsubscribe = firebase.auth().onAuthStateChanged((user) => {
-            setUser(user);
-            setLoading(false);
-        });
+  useEffect(() => {
+    const unsubscribe = firebase.auth().onAuthStateChanged((nextUser: firebase.User | null) => {
+      setUser(nextUser);
+      setLoading(false);
+    });
 
-        return () => unsubscribe(); // Cleanup subscription on unmount
-    }, []);
+    return () => unsubscribe();
+  }, []);
 
-    const login = async (phoneNumber) => {
-        try {
-            const confirmationResult = await firebase.auth().signInWithPhoneNumber(phoneNumber);
-            return confirmationResult; // Return confirmation result for OTP verification
-        } catch (error) {
-            console.error("Login failed:", error);
-            throw error; // Rethrow error for handling in the component
-        }
-    };
+  const login = async (phoneNumber: string, appVerifier: firebase.auth.ApplicationVerifier) => {
+    try {
+      const confirmationResult = await firebase.auth().signInWithPhoneNumber(phoneNumber, appVerifier);
+      return confirmationResult;
+    } catch (error) {
+      console.error('Login failed:', error);
+      throw error;
+    }
+  };
 
-    const logout = async () => {
-        try {
-            await firebase.auth().signOut();
-            setUser(null); // Clear user state on logout
-        } catch (error) {
-            console.error("Logout failed:", error);
-            throw error; // Rethrow error for handling in the component
-        }
-    };
+  const logout = async () => {
+    try {
+      await firebase.auth().signOut();
+      setUser(null);
+    } catch (error) {
+      console.error('Logout failed:', error);
+      throw error;
+    }
+  };
 
-    return { user, loading, login, logout };
+  return { user, loading, login, logout };
 };
 
 export default useAuth;

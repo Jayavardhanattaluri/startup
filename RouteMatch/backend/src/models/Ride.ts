@@ -1,38 +1,87 @@
-// Ride.ts
-import { Schema, model, Document } from 'mongoose';
+export type RideStatus = 'pending' | 'matched' | 'accepted' | 'in_progress' | 'completed' | 'cancelled';
 
-interface IRide extends Document {
-    pickupLocation: {
-        latitude: number;
-        longitude: number;
-    };
-    dropOffLocation: {
-        latitude: number;
-        longitude: number;
-    };
-    userId: string; // Reference to the user who requested the ride
-    driverId?: string; // Optional reference to the driver assigned to the ride
-    status: 'pending' | 'accepted' | 'completed' | 'canceled'; // Current status of the ride
-    createdAt: Date;
-    updatedAt: Date;
+export interface RideLocation {
+  latitude: number;
+  longitude: number;
 }
 
-const rideSchema = new Schema<IRide>({
-    pickupLocation: {
-        latitude: { type: Number, required: true },
-        longitude: { type: Number, required: true },
-    },
-    dropOffLocation: {
-        latitude: { type: Number, required: true },
-        longitude: { type: Number, required: true },
-    },
-    userId: { type: String, required: true },
-    driverId: { type: String, default: null },
-    status: { type: String, enum: ['pending', 'accepted', 'completed', 'canceled'], default: 'pending' },
-}, {
-    timestamps: true, // Automatically manage createdAt and updatedAt fields
-});
+export interface Ride {
+  id: string;
+  pickupLocation: RideLocation;
+  dropOffLocation: RideLocation;
+  riderId: string;
+  driverId?: string;
+  vehicleType: 'bike' | 'car' | 'scooter';
+  detourLimitKm: number;
+  status: RideStatus;
+  createdAt: string;
+  updatedAt: string;
+}
 
-const Ride = model<IRide>('Ride', rideSchema);
+export interface CreateRideInput {
+  pickupLocation: RideLocation;
+  dropOffLocation: RideLocation;
+  riderId: string;
+  driverId?: string;
+  vehicleType?: 'bike' | 'car' | 'scooter';
+  detourLimitKm?: number;
+}
 
-export default Ride;
+const rides = new Map<string, Ride>();
+
+const generateId = () => `ride_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+
+export const RideStore = {
+  create(input: CreateRideInput): Ride {
+    const now = new Date().toISOString();
+    const ride: Ride = {
+      id: generateId(),
+      pickupLocation: input.pickupLocation,
+      dropOffLocation: input.dropOffLocation,
+      riderId: input.riderId,
+      driverId: input.driverId,
+      vehicleType: input.vehicleType || 'car',
+      detourLimitKm: input.detourLimitKm ?? 1,
+      status: 'pending',
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    rides.set(ride.id, ride);
+    return ride;
+  },
+
+  list(): Ride[] {
+    return Array.from(rides.values());
+  },
+
+  listAvailable(): Ride[] {
+    return Array.from(rides.values()).filter((ride) => ['pending', 'matched'].includes(ride.status));
+  },
+
+  getById(id: string): Ride | undefined {
+    return rides.get(id);
+  },
+
+  update(id: string, patch: Partial<Omit<Ride, 'id' | 'createdAt'>>): Ride | undefined {
+    const existing = rides.get(id);
+    if (!existing) {
+      return undefined;
+    }
+
+    const updated: Ride = {
+      ...existing,
+      ...patch,
+      id: existing.id,
+      createdAt: existing.createdAt,
+      updatedAt: new Date().toISOString(),
+    };
+
+    rides.set(id, updated);
+    return updated;
+  },
+
+  delete(id: string): boolean {
+    return rides.delete(id);
+  },
+};
