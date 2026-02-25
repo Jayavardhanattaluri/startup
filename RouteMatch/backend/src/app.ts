@@ -26,7 +26,7 @@ app.use('/api', apiRoutes);
 const httpServer = createServer(app);
 socketHandler(httpServer);
 
-if (process.env.NODE_ENV !== 'test') {
+if (process.env.NODE_ENV !== 'test' && process.env.VERCEL !== '1') {
   httpServer.listen(PORT, () => {
     // eslint-disable-next-line no-console
     console.log(`Server is running on http://localhost:${PORT}`);
